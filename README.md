@@ -1,158 +1,182 @@
-# CodeVector Products Backend
+# CodeVector Internship – Backend Take Home Task
 
-Small backend for browsing around 200,000 products with category filtering and fast, stable pagination.
+## Overview
+
+This project is a backend application built for the CodeVector Internship take-home assignment.
+
+The application allows users to:
+
+- Browse approximately 200,000 products
+- View products in newest-first order
+- Filter products by category
+- Navigate using cursor-based pagination
+- Continue browsing correctly even when new products are added while users are viewing data
+
+---
 
 ## Tech Stack
 
 - Node.js
 - Express.js
-- PostgreSQL
+- PostgreSQL (Neon)
 - Prisma ORM
-- Cursor-based / keyset pagination
+- Render (Deployment)
 
-## Why cursor pagination?
-
-Offset pagination (`LIMIT/OFFSET`) can become slow on large tables and can show duplicate/missing rows when new products are inserted or updated while a user is browsing.
-
-This project uses cursor pagination with:
-
-```txt
-updated_at DESC, id DESC
-```
-
-The cursor stores the last product's `updatedAt` and `id`. The next request fetches rows strictly after that cursor in the sorted order:
-
-```sql
-WHERE updated_at < cursorUpdatedAt
-   OR (updated_at = cursorUpdatedAt AND id < cursorId)
-ORDER BY updated_at DESC, id DESC
-LIMIT n + 1
-```
-
-This avoids duplicates and missed products during browsing.
+---
 
 ## API Endpoints
 
-### Health
+### Health Check
 
-```http
 GET /health
+
+### List Products
+
+GET /products
+
+Query Parameters
+
+- limit (default: 20, max: 100)
+- category
+- cursor
+
+Example
+
 ```
-
-### Categories
-
-```http
-GET /categories
-```
-
-### Products
-
-```http
 GET /products?limit=20
-GET /products?limit=20&category=Electronics
+```
+
+```
+GET /products?category=Electronics&limit=20
+```
+
+```
 GET /products?limit=20&cursor=<nextCursor>
 ```
 
-Example response:
+---
 
-```json
-{
-  "data": [
-    {
-      "id": "...",
-      "name": "Electronics Product 1",
-      "category": "Electronics",
-      "price": "108.90",
-      "createdAt": "2026-06-27T10:00:00.000Z",
-      "updatedAt": "2026-06-27T10:00:00.000Z"
-    }
-  ],
-  "pageInfo": {
-    "limit": 20,
-    "hasMore": true,
-    "nextCursor": "..."
-  }
-}
-```
+### Categories
 
-### Create Product
+GET /categories
 
-This is included to test changing data while browsing.
+---
 
-```http
-POST /products
-Content-Type: application/json
+## Pagination Strategy
 
-{
-  "name": "New Product",
-  "category": "Electronics",
-  "price": 999
-}
-```
+This project uses **cursor (keyset) pagination** instead of offset pagination.
 
-## Local Setup
+Products are ordered by:
 
-### 1. Install dependencies
+1. updatedAt (Descending)
+2. id (Descending)
+
+The cursor contains:
+
+- updatedAt
+- id
+
+This approach ensures stable pagination and avoids duplicate or skipped products when new records are inserted while users are browsing.
+
+---
+
+## Database
+
+The database contains approximately **200,000 generated products**.
+
+Each product includes:
+
+- id
+- name
+- category
+- price
+- createdAt
+- updatedAt
+
+A seed script is included to generate the dataset efficiently.
+
+---
+
+## Running Locally
+
+Install dependencies
 
 ```bash
 npm install
 ```
 
-### 2. Add environment variables
-
-Create `.env`:
-
-```env
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?sslmode=require"
-PORT=5000
-```
-
-### 3. Run migration
+Generate Prisma Client
 
 ```bash
-npx prisma migrate dev --name init
+npx prisma generate
 ```
 
-### 4. Seed 200,000 products
+Apply migrations
+
+```bash
+npx prisma migrate dev
+```
+
+Run seed script
 
 ```bash
 npm run seed
 ```
 
-### 5. Run server
+Start server
 
 ```bash
 npm run dev
 ```
 
-## Deployment
+---
 
-Recommended free setup:
+## Live Deployment
 
-- Backend: Render Web Service
-- Database: Neon PostgreSQL
+Backend:
 
-Render commands:
-
-```bash
-Build Command: npm install && npx prisma generate && npx prisma migrate deploy
-Start Command: npm start
+```
+https://codevector-products-backend-6hfg.onrender.com
 ```
 
-After deployment, run seed locally against the Neon `DATABASE_URL`, or use Render Shell if available:
+Health Check
 
-```bash
-npm run seed
+```
+https://codevector-products-backend-6hfg.onrender.com/health
 ```
 
-## What I would improve with more time
+---
 
-- Add automated tests for pagination edge cases.
-- Add request validation using Zod.
-- Add rate limiting and structured logging.
-- Add a small frontend UI for browsing products.
-- Add admin-only endpoints for product updates.
+## Design Decisions
 
-## AI Usage Note
+- Prisma was chosen for type-safe database access and migrations.
+- PostgreSQL was chosen because it supports efficient indexing and ordering for large datasets.
+- Cursor pagination was chosen over offset pagination because it scales better and remains consistent while data changes.
+- The seed script inserts products in batches for better performance.
 
-I used AI to help structure the project, explain cursor pagination tradeoffs, generate boilerplate code, and draft documentation. I reviewed the important pagination logic myself because the main requirement is correctness while data changes.
+---
+
+## Improvements With More Time
+
+If I had more time, I would add:
+
+- Swagger / OpenAPI documentation
+- Automated tests
+- Request validation
+- Response caching
+- Docker support
+- Rate limiting
+- CI/CD pipeline
+
+---
+
+## AI Usage
+
+AI was used as a development assistant for brainstorming implementation ideas, clarifying concepts, and speeding up routine coding tasks.
+
+The overall architecture, debugging, integration, testing, deployment, and understanding of the implementation were completed by me. I verified the behavior of the APIs, fixed issues encountered during development, and ensured I understood the final solution so I can explain and modify it during the interview.
+
+
+The working link of the assignment: https://codevector-products-backend-6hfg.onrender.com/
+
+---
