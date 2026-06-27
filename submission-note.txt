@@ -1,0 +1,17 @@
+Hi Siddharth,
+
+Here is my submission for the CodeVector internship take-home task.
+
+Live URL: <your-render-url>
+GitHub Repo: <your-github-repo-url>
+
+I built a small Node.js + Express backend using PostgreSQL and Prisma. I chose PostgreSQL because it handles large datasets well and supports proper indexing. I used cursor-based pagination instead of offset pagination because offset pagination can become slow and can show duplicate/missing products if new products are inserted or updated while a user is browsing.
+
+The products are ordered by `updated_at DESC, id DESC`. The cursor stores the last product's `updated_at` and `id`, so the next request fetches only products after that exact point in the sorted order. I also added indexes for `(updated_at, id)` and `(category, updated_at, id)` so browsing and category filtering stay fast.
+
+With more time, I would add automated tests for pagination edge cases, better request validation, rate limiting, structured logging, and a small UI.
+
+I used AI to speed up boilerplate, documentation, and to reason about pagination approaches. I made sure I understood the cursor pagination logic because I know the next round involves explaining and changing my own code live.
+
+Thanks,
+Nirmal Kumar
